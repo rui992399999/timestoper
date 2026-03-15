@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>TIME STOP</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Zen+Kaku+Gothic+New:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07080f;--panel:#0d0e1c;--panel2:#111220;--border:rgba(255,255,255,.07);
+  --accent:#00f5ff;--accent2:#ff3cac;--gold:#ffc840;--silver:#b8c0cc;--bronze:#cd8b4a;
+  --text:#dde2f5;--muted:#444666;--muted2:#5a5d7a;
+  --success:#3dffb0;--warn:#ffab40;--danger:#ff4d6a;--xp:#a78bfa;--premium:#ff3cac;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{background:var(--bg);color:var(--text);font-family:'Zen Kaku Gothic New',sans-serif;overflow-x:hidden;overflow-y:auto;min-height:100%;}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.08) 3px,rgba(0,0,0,.08) 4px);}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background-image:radial-gradient(rgba(0,245,255,.05) 1px,transparent 1px);background-size:28px 28px;}
+#flash{position:fixed;inset:0;pointer-events:none;z-index:990;opacity:0;transition:opacity .07s;}
+#flash.on{opacity:1;}
+#toast{position:fixed;top:14px;left:50%;transform:translateX(-50%) translateY(-100px);background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:9px 18px;font-size:.7rem;letter-spacing:.1em;z-index:980;transition:transform .3s cubic-bezier(.175,.885,.32,1.275);white-space:nowrap;pointer-events:none;box-shadow:0 8px 32px rgba(0,0,0,.5);}
+#toast.show{transform:translateX(-50%) translateY(0);}
+.page{display:none;position:relative;z-index:10;width:100%;max-width:430px;margin:0 auto;min-height:100dvh;flex-direction:column;align-items:center;padding:0 16px 36px;}
+.page.active{display:flex;}
+.sec-lbl{font-size:.5rem;letter-spacing:.35em;color:var(--muted2);text-transform:uppercase;align-self:flex-start;}
+.back-btn{background:transparent;border:1px solid var(--border);color:var(--muted2);font-family:'Zen Kaku Gothic New',sans-serif;font-size:.62rem;letter-spacing:.1em;padding:6px 12px;border-radius:4px;cursor:pointer;}
+.back-btn:active{border-color:var(--text);color:var(--text);}
+.btn{flex:1;padding:14px;border-radius:6px;border:none;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:.78rem;letter-spacing:.1em;transition:transform .1s,opacity .15s;touch-action:manipulation;}
+.btn:active{transform:scale(.97);opacity:.88;}
+.btn-p{background:var(--accent);color:var(--bg);}
+.btn-s{background:transparent;border:1px solid var(--border);color:var(--muted2);}
+.btn-s:active{border-color:var(--accent);color:var(--accent);}
+.btn-row{display:flex;gap:8px;width:100%;}
+.bnav{display:flex;width:100%;background:var(--panel);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.bnav-btn{flex:1;padding:11px 4px;background:transparent;border:none;color:var(--muted2);font-family:'Zen Kaku Gothic New',sans-serif;font-size:.55rem;letter-spacing:.08em;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;transition:color .2s,background .2s;}
+.bnav-btn .ni{font-size:1.1rem;}
+.bnav-btn.on,.bnav-btn:active{color:var(--accent);background:rgba(0,245,255,.05);}
+.card{width:100%;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px;}
+.ad-strip{width:100%;background:var(--panel2);border:1px dashed rgba(255,255,255,.09);border-radius:6px;padding:9px 12px;display:flex;align-items:center;gap:9px;position:relative;}
+.ad-tag{position:absolute;top:3px;right:6px;font-size:.44rem;letter-spacing:.12em;color:var(--muted);}
+.ad-head{font-size:.68rem;font-weight:700;}
+.ad-sub{font-size:.54rem;color:var(--muted2);margin-top:2px;line-height:1.4;}
+.ad-cta{background:rgba(0,245,255,.1);border:1px solid rgba(0,245,255,.22);color:var(--accent);font-family:'Zen Kaku Gothic New',sans-serif;font-size:.54rem;padding:5px 10px;border-radius:4px;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+
+/* TOP */
+#pgTop{padding-top:0;gap:11px;justify-content:flex-start;}
+.logo-wrap{padding:20px 0 0;display:flex;flex-direction:column;align-items:center;gap:2px;width:100%;}
+.logo{font-family:'Share Tech Mono',monospace;font-size:2.4rem;letter-spacing:.14em;color:var(--accent);line-height:1;text-shadow:0 0 18px rgba(0,245,255,.5),0 0 50px rgba(0,245,255,.18);}
+.logo em{color:var(--text);font-style:normal;}
+.logo-tag{font-size:.5rem;letter-spacing:.38em;color:var(--muted2);text-transform:uppercase;}
+.xp-card{width:100%;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:10px 13px;}
+.xp-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+.xp-lv{font-family:'Share Tech Mono',monospace;font-size:.82rem;color:var(--xp);}
+.xp-next{font-size:.54rem;color:var(--muted2);}
+.xp-bar{height:5px;background:var(--panel2);border-radius:3px;overflow:hidden;}
+.xp-fill{height:100%;background:linear-gradient(90deg,var(--xp),rgba(167,139,250,.5));border-radius:3px;transition:width .6s ease;}
+.stats-strip{display:flex;gap:7px;width:100%;}
+.stat-box{flex:1;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:9px 5px;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.stat-lbl{font-size:.45rem;letter-spacing:.2em;color:var(--muted2);text-transform:uppercase;}
+.stat-val{font-family:'Share Tech Mono',monospace;font-size:1rem;color:var(--accent);line-height:1;}
+.combo-badge{width:100%;background:linear-gradient(135deg,rgba(255,200,64,.1),rgba(255,171,64,.05));border:1px solid rgba(255,200,64,.22);border-radius:8px;padding:9px 13px;display:none;align-items:center;gap:10px;}
+.combo-badge.show{display:flex;}
+.combo-info{flex:1;}
+.combo-lbl{font-size:.5rem;letter-spacing:.25em;color:var(--gold);text-transform:uppercase;}
+.combo-ct{font-family:'Share Tech Mono',monospace;font-size:1.2rem;color:var(--gold);line-height:1;}
+.combo-m{font-size:.55rem;color:var(--muted2);}
+.missions-card{width:100%;}
+.missions-ttl{font-size:.5rem;letter-spacing:.28em;color:var(--muted2);text-transform:uppercase;margin-bottom:8px;}
+.mission-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);}
+.mission-row:last-child{border-bottom:none;padding-bottom:0;}
+.m-icon{font-size:.95rem;flex-shrink:0;}
+.m-info{flex:1;}
+.m-name{font-size:.66rem;font-weight:700;}
+.m-pbar{height:3px;background:var(--panel2);border-radius:2px;margin-top:4px;overflow:hidden;}
+.m-pfill{height:100%;background:var(--accent);border-radius:2px;transition:width .5s;}
+.m-rew{font-family:'Share Tech Mono',monospace;font-size:.62rem;color:var(--xp);flex-shrink:0;}
+.m-claim{font-size:.8rem;cursor:pointer;}
+.mode-row{display:flex;gap:7px;width:100%;}
+.mcard{flex:1;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:12px 7px 10px;cursor:pointer;transition:border-color .2s,transform .15s;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.mcard::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--mc,var(--accent));opacity:.7;}
+.mcard:active{transform:scale(.96);border-color:var(--mc,var(--accent));}
+.mcard-icon{font-size:1.3rem;}
+.mcard-name{font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:.1em;color:var(--text);}
+.mcard-sub{font-size:.5rem;color:var(--muted2);}
+.cotd{width:100%;background:linear-gradient(135deg,rgba(255,60,172,.1),rgba(0,245,255,.05));border:1px solid rgba(255,60,172,.28);border-radius:10px;padding:13px;cursor:pointer;position:relative;overflow:hidden;transition:transform .15s;}
+.cotd:active{transform:scale(.98);}
+.cotd-badge{font-size:.46rem;letter-spacing:.3em;font-weight:700;color:var(--accent2);text-transform:uppercase;margin-bottom:2px;}
+.cotd-title{font-family:'Share Tech Mono',monospace;font-size:1.1rem;letter-spacing:.1em;}
+.cotd-desc{font-size:.58rem;color:var(--muted2);margin-top:3px;}
+.cotd-num{position:absolute;right:13px;top:50%;transform:translateY(-50%);font-family:'Share Tech Mono',monospace;font-size:2.1rem;color:rgba(255,255,255,.06);line-height:1;}
+
+/* GAME */
+#pgGame{padding-top:16px;justify-content:space-between;gap:9px;}
+.ghdr{width:100%;display:flex;justify-content:space-between;align-items:center;}
+.mode-pill{font-family:'Share Tech Mono',monospace;font-size:.58rem;letter-spacing:.15em;color:var(--accent);background:rgba(0,245,255,.08);border:1px solid rgba(0,245,255,.2);padding:4px 10px;border-radius:4px;}
+.gstatus{width:100%;display:flex;gap:7px;}
+.gs-box{flex:1;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:6px 9px;display:flex;align-items:center;gap:5px;}
+.gs-ico{font-size:.85rem;}
+.gs-val{font-family:'Share Tech Mono',monospace;font-size:.78rem;color:var(--gold);}
+.gs-lbl{font-size:.48rem;color:var(--muted2);}
+.hint-box{flex:2;background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.2);border-radius:6px;padding:6px 9px;display:none;align-items:center;gap:5px;}
+.hint-box.show{display:flex;}
+.hint-txt{font-size:.62rem;color:var(--xp);}
+.ci-wrap{width:100%;text-align:center;}
+.ci-lbl{font-size:.48rem;letter-spacing:.38em;color:var(--muted2);text-transform:uppercase;}
+.ci-name{font-family:'Share Tech Mono',monospace;font-size:.9rem;letter-spacing:.1em;color:var(--text);margin-top:2px;}
+.target-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.target-lbl{font-size:.48rem;letter-spacing:.38em;color:var(--muted2);text-transform:uppercase;}
+.target-num{font-family:'Share Tech Mono',monospace;font-size:4.8rem;line-height:1;letter-spacing:-.02em;color:var(--text);text-shadow:0 0 30px rgba(255,255,255,.08);}
+.target-num sup{font-size:1.45rem;color:var(--muted2);vertical-align:top;margin-top:.72rem;}
+.tap-wrap{position:relative;width:182px;height:182px;flex-shrink:0;}
+.pulse-ring{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(0,245,255,.22);animation:pring 2.2s ease-out infinite;}
+.pulse-ring:nth-child(2){animation-delay:.75s;}
+.pulse-ring:nth-child(3){animation-delay:1.5s;}
+@keyframes pring{0%{transform:scale(1);opacity:.55}100%{transform:scale(1.5);opacity:0}}
+.tap-circle{position:absolute;inset:0;border-radius:50%;background:rgba(0,245,255,.03);border:1px solid rgba(0,245,255,.16);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;touch-action:manipulation;transition:background .1s;}
+.tap-circle:active{background:rgba(0,245,255,.08);}
+.tap-circle.running{border-color:rgba(255,255,255,.09);}
+.tc-icon{font-size:2rem;line-height:1;}
+.tc-text{font-family:'Share Tech Mono',monospace;font-size:.66rem;letter-spacing:.16em;color:var(--accent);text-transform:uppercase;}
+.tc-dots{font-family:'Share Tech Mono',monospace;font-size:.9rem;color:var(--muted2);letter-spacing:.25em;min-height:1.15em;}
+.state-hint{font-size:.58rem;letter-spacing:.13em;color:var(--muted2);text-align:center;min-height:1.25em;}
+.result-card{width:100%;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:15px;display:none;flex-direction:column;align-items:center;gap:8px;}
+.result-card.show{display:flex;}
+.rg{font-family:'Share Tech Mono',monospace;font-size:2.5rem;line-height:1;font-weight:700;}
+.rg.S{color:var(--gold);text-shadow:0 0 18px rgba(255,200,64,.5);}
+.rg.A{color:var(--success);}
+.rg.B{color:var(--accent);}
+.rg.C{color:var(--warn);}
+.rg.D{color:var(--danger);}
+.new-best{background:rgba(255,200,64,.1);border:1px solid rgba(255,200,64,.35);color:var(--gold);font-size:.56rem;letter-spacing:.18em;padding:2px 10px;border-radius:100px;display:none;}
+.new-best.show{display:block;}
+.xp-gained{font-size:.58rem;color:var(--xp);letter-spacing:.12em;}
+.rdiff{font-family:'Share Tech Mono',monospace;font-size:1.75rem;color:var(--text);}
+.rstats{display:flex;gap:14px;}
+.rsc{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.rsc-l{font-size:.48rem;letter-spacing:.2em;color:var(--muted2);text-transform:uppercase;}
+.rsc-v{font-family:'Share Tech Mono',monospace;font-size:.88rem;}
+.reward-wrap{width:100%;display:none;flex-direction:column;gap:7px;}
+.reward-wrap.show{display:flex;}
+.reward-lbl{font-size:.5rem;letter-spacing:.22em;color:var(--muted2);text-align:center;text-transform:uppercase;}
+.rw-btn{width:100%;padding:12px;border-radius:7px;border:none;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:.76rem;letter-spacing:.08em;transition:transform .1s,opacity .15s;touch-action:manipulation;display:flex;align-items:center;justify-content:center;gap:7px;}
+.rw-btn:active{transform:scale(.97);opacity:.88;}
+.rw-badge{background:rgba(0,0,0,.3);border-radius:4px;padding:1px 7px;font-size:.56rem;letter-spacing:.06em;}
+.rw-retry{background:rgba(0,245,255,.1);border:1px solid rgba(0,245,255,.28);color:var(--accent);}
+.rw-double{background:rgba(255,200,64,.1);border:1px solid rgba(255,200,64,.28);color:var(--gold);}
+.rw-cont{background:rgba(61,255,176,.1);border:1px solid rgba(61,255,176,.28);color:var(--success);}
+.result-ad{width:100%;background:var(--panel2);border:1px dashed rgba(255,255,255,.09);border-radius:6px;padding:10px 12px;display:none;flex-direction:column;align-items:center;gap:6px;position:relative;}
+.result-ad.show{display:flex;}
+.rad-inner{display:flex;align-items:center;gap:9px;width:100%;}
+.rad-skip{align-self:flex-end;font-size:.48rem;color:var(--muted2);background:transparent;border:none;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;text-decoration:underline;}
+
+/* RANKING */
+#pgRank{padding-top:16px;gap:10px;}
+.rank-hdr{width:100%;display:flex;justify-content:space-between;align-items:center;}
+.rank-title{font-family:'Share Tech Mono',monospace;font-size:1.2rem;letter-spacing:.14em;color:var(--accent);}
+.tabs{display:flex;width:100%;background:var(--panel);border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+.tab{flex:1;padding:8px 3px;background:transparent;border:none;color:var(--muted2);font-family:'Zen Kaku Gothic New',sans-serif;font-size:.56rem;letter-spacing:.1em;cursor:pointer;transition:color .2s,background .2s;}
+.tab.on{color:var(--accent);background:rgba(0,245,255,.07);}
+.cf-wrap{display:none;flex-wrap:wrap;gap:5px;width:100%;}
+.cf-wrap.show{display:flex;}
+.cf-btn{background:var(--panel);border:1px solid var(--border);color:var(--muted2);font-family:'Zen Kaku Gothic New',sans-serif;font-size:.54rem;letter-spacing:.07em;padding:4px 10px;border-radius:100px;cursor:pointer;transition:border-color .2s,color .2s;}
+.cf-btn.on{border-color:var(--accent2);color:var(--accent2);}
+.podium{width:100%;display:flex;gap:7px;align-items:flex-end;padding:8px 4px 0;}
+.pod-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.pod-av{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.35rem;border:2px solid var(--border);position:relative;}
+.pod-av .pod-lv{position:absolute;bottom:-4px;right:-4px;background:var(--xp);color:#fff;font-family:'Share Tech Mono',monospace;font-size:.4rem;border-radius:3px;padding:1px 3px;}
+.pod-name{font-size:.6rem;font-weight:700;text-align:center;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pod-score{font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--accent);}
+.pod-block{width:100%;border-radius:6px 6px 0 0;background:var(--panel);border:1px solid var(--border);}
+.pod-item.p1 .pod-block{height:52px;border-color:rgba(255,200,64,.35);}
+.pod-item.p2 .pod-block{height:36px;border-color:rgba(184,192,204,.25);}
+.pod-item.p3 .pod-block{height:26px;border-color:rgba(205,139,74,.25);}
+.pod-item.p1 .pod-av{border-color:var(--gold);}
+.pod-item.p2 .pod-av{border-color:var(--silver);}
+.pod-item.p3 .pod-av{border-color:var(--bronze);}
+.rank-list{width:100%;display:flex;flex-direction:column;gap:5px;}
+.rank-loading{color:var(--muted2);font-size:.65rem;letter-spacing:.2em;text-align:center;padding:32px 0;width:100%;}
+.ri{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:9px 11px;position:relative;overflow:hidden;}
+.ri.r1{border-color:rgba(255,200,64,.3);}
+.ri.r2{border-color:rgba(184,192,204,.2);}
+.ri.r3{border-color:rgba(205,139,74,.2);}
+.ri.me{border-color:rgba(0,245,255,.28);background:rgba(0,245,255,.03);}
+.ri::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;}
+.ri.r1::before{background:var(--gold);}
+.ri.r2::before{background:var(--silver);}
+.ri.r3::before{background:var(--bronze);}
+.ri.me::before{background:var(--accent);}
+.ri-pos{font-family:'Share Tech Mono',monospace;font-size:.8rem;color:var(--muted2);width:18px;text-align:center;flex-shrink:0;}
+.ri.r1 .ri-pos{color:var(--gold);}
+.ri.r2 .ri-pos{color:var(--silver);}
+.ri.r3 .ri-pos{color:var(--bronze);}
+.ri-av{width:30px;height:30px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0;position:relative;}
+.ri-lv{position:absolute;bottom:-4px;right:-4px;background:var(--xp);color:#fff;font-family:'Share Tech Mono',monospace;font-size:.38rem;border-radius:3px;padding:1px 3px;}
+.ri-info{flex:1;min-width:0;}
+.ri-name-row{display:flex;align-items:center;gap:5px;}
+.ri-name{font-size:.74rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ri-badge{font-size:.56rem;background:rgba(255,200,64,.15);border:1px solid rgba(255,200,64,.3);color:var(--gold);padding:1px 6px;border-radius:3px;white-space:nowrap;flex-shrink:0;}
+.ri-meta{font-size:.54rem;color:var(--muted2);margin-top:2px;letter-spacing:.04em;}
+.ri-score{flex-shrink:0;text-align:right;}
+.ri-pts{font-family:'Share Tech Mono',monospace;font-size:.98rem;color:var(--accent);}
+.ri-ptsl{font-size:.46rem;color:var(--muted2);letter-spacing:.1em;}
+.reward-banner{width:100%;background:linear-gradient(135deg,rgba(255,200,64,.1),rgba(255,171,64,.05));border:1px solid rgba(255,200,64,.22);border-radius:8px;padding:11px 13px;}
+.rb-title{font-size:.7rem;font-weight:700;margin-bottom:7px;display:flex;align-items:center;gap:6px;}
+.rb-item{display:flex;align-items:center;gap:9px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.rb-item:last-child{border-bottom:none;padding-bottom:0;}
+.rb-icon{font-size:1.1rem;flex-shrink:0;width:24px;text-align:center;}
+.rb-info{flex:1;}
+.rb-iname{font-size:.66rem;font-weight:700;}
+.rb-idesc{font-size:.56rem;color:var(--muted2);margin-top:2px;}
+.rb-rew{font-family:'Share Tech Mono',monospace;font-size:.62rem;color:var(--gold);flex-shrink:0;}
+.friend-card{width:100%;background:var(--panel);border:1px solid rgba(0,245,255,.18);border-radius:10px;padding:14px;}
+.fc-title{font-size:.7rem;font-weight:700;margin-bottom:9px;display:flex;align-items:center;gap:6px;}
+.fc-code-row{display:flex;gap:8px;align-items:center;}
+.fc-code{font-family:'Share Tech Mono',monospace;font-size:1.4rem;color:var(--accent);letter-spacing:.2em;flex:1;text-align:center;background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:10px;}
+.fc-copy{background:rgba(0,245,255,.1);border:1px solid rgba(0,245,255,.22);color:var(--accent);font-family:'Zen Kaku Gothic New',sans-serif;font-size:.65rem;padding:8px 14px;border-radius:6px;cursor:pointer;white-space:nowrap;}
+.fc-input-row{display:flex;gap:8px;margin-top:9px;}
+.fc-input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.85rem;padding:9px 11px;outline:none;transition:border-color .2s;letter-spacing:.15em;}
+.fc-input:focus{border-color:var(--accent);}
+.fc-join{background:var(--accent);color:var(--bg);border:none;border-radius:6px;font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:.7rem;padding:9px 16px;cursor:pointer;white-space:nowrap;}
+.fc-vs{width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:12px;display:none;flex-direction:column;gap:8px;margin-top:9px;}
+.fc-vs.show{display:flex;}
+.fc-vs-row{display:flex;align-items:center;gap:10px;}
+.fc-vs-lbl{font-size:.5rem;letter-spacing:.22em;color:var(--muted2);text-transform:uppercase;margin-bottom:4px;}
+.fc-vs-name{font-size:.78rem;font-weight:700;}
+.fc-vs-score{font-family:'Share Tech Mono',monospace;font-size:1.1rem;color:var(--accent);}
+
+/* SHOP */
+#pgShop{padding-top:16px;gap:12px;}
+.shop-hdr{width:100%;text-align:center;}
+.shop-title{font-family:'Share Tech Mono',monospace;font-size:1.35rem;letter-spacing:.14em;color:var(--premium);text-shadow:0 0 18px rgba(255,60,172,.4);}
+.shop-sub{font-size:.5rem;letter-spacing:.28em;color:var(--muted2);text-transform:uppercase;margin-top:3px;}
+.plan-compare{width:100%;display:flex;gap:8px;}
+.plan-card{flex:1;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:13px 11px;position:relative;overflow:hidden;display:flex;flex-direction:column;gap:5px;}
+.plan-card.hot{border-color:rgba(255,60,172,.35);}
+.plan-card.hot::before{content:'おすすめ';position:absolute;top:-1px;left:50%;transform:translateX(-50%);background:var(--premium);color:#fff;font-size:.44rem;font-weight:700;letter-spacing:.15em;padding:2px 10px;border-radius:0 0 6px 6px;}
+.plan-name{font-family:'Share Tech Mono',monospace;font-size:.68rem;letter-spacing:.14em;color:var(--text);margin-top:6px;}
+.plan-price{font-family:'Share Tech Mono',monospace;font-size:1.45rem;line-height:1;}
+.plan-per{font-size:.48rem;color:var(--muted2);}
+.plan-feats{list-style:none;display:flex;flex-direction:column;gap:4px;margin:6px 0;}
+.plan-feats li{font-size:.58rem;color:var(--muted2);display:flex;align-items:flex-start;gap:4px;line-height:1.4;}
+.plan-feats li.yes{color:var(--text);}
+.plan-feats li.yes::before{content:'✓';color:var(--premium);font-size:.75rem;flex-shrink:0;}
+.plan-feats li:not(.yes)::before{content:'·';color:var(--muted2);flex-shrink:0;}
+.plan-btn{width:100%;padding:10px;border-radius:6px;border:none;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:.72rem;letter-spacing:.1em;touch-action:manipulation;transition:opacity .2s;margin-top:auto;}
+.plan-btn:active{opacity:.82;}
+.plan-btn.free-btn{background:transparent;border:1px solid var(--border);color:var(--muted2);}
+.plan-btn.hot-btn{background:linear-gradient(90deg,var(--premium),rgba(255,60,172,.7));color:#fff;}
+.price-editor{width:100%;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:12px;display:flex;align-items:center;gap:9px;}
+.pe-lbl{font-size:.62rem;color:var(--muted2);flex:1;}
+.pe-input{width:72px;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.88rem;padding:6px 8px;outline:none;text-align:center;}
+.pe-unit{font-size:.6rem;color:var(--muted2);}
+.pe-btn{background:var(--accent);color:var(--bg);border:none;border-radius:5px;padding:6px 12px;font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:.65rem;cursor:pointer;}
+.ap-list{display:flex;flex-direction:column;gap:7px;}
+.ap-item{display:flex;align-items:center;gap:9px;background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:9px 11px;}
+.ap-ico{font-size:.95rem;flex-shrink:0;}
+.ap-info{flex:1;}
+.ap-name{font-size:.68rem;font-weight:700;}
+.ap-desc{font-size:.54rem;color:var(--muted2);margin-top:2px;}
+.ap-freq{font-family:'Share Tech Mono',monospace;font-size:.58rem;color:var(--accent);flex-shrink:0;}
+.rev-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
+.rev-lbl{font-size:.58rem;color:var(--muted2);width:76px;flex-shrink:0;}
+.rev-track{flex:1;height:5px;background:var(--panel2);border-radius:3px;overflow:hidden;}
+.rev-fill{height:100%;border-radius:3px;background:var(--accent);}
+.rev-val{font-family:'Share Tech Mono',monospace;font-size:.58rem;color:var(--muted2);width:48px;text-align:right;flex-shrink:0;}
+.tech-note{font-size:.55rem;color:var(--muted);text-align:center;line-height:1.7;padding:0 4px;letter-spacing:.05em;}
+.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;width:100%;}
+.chip{background:var(--panel);border:1px solid var(--border);border-radius:100px;padding:4px 10px;font-size:.54rem;letter-spacing:.07em;color:var(--muted2);display:flex;align-items:center;gap:4px;}
+
+/* MODALS */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:800;align-items:center;justify-content:center;padding:18px;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:20px;width:100%;max-width:340px;display:flex;flex-direction:column;gap:12px;}
+.modal-ttl{font-family:'Share Tech Mono',monospace;font-size:.95rem;letter-spacing:.13em;color:var(--accent);}
+.modal-txt{font-size:.64rem;color:var(--muted2);line-height:1.65;}
+.modal input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Zen Kaku Gothic New',sans-serif;font-size:.9rem;padding:10px 12px;outline:none;transition:border-color .2s;}
+.modal input:focus{border-color:var(--accent);}
+.modal-btns{display:flex;gap:8px;}
+.video-mock{width:100%;background:var(--panel2);border-radius:8px;padding:18px 14px;display:flex;flex-direction:column;align-items:center;gap:9px;}
+.video-screen{width:100%;height:70px;background:var(--bg);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;border:1px solid var(--border);position:relative;overflow:hidden;}
+.video-prog{position:absolute;bottom:0;left:0;height:3px;background:var(--premium);transition:width .1s linear;}
+.video-countdown{font-size:.6rem;color:var(--muted2);text-align:center;letter-spacing:.1em;}
+.video-skip{background:rgba(255,60,172,.15);border:1px solid rgba(255,60,172,.28);color:var(--premium);font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:.7rem;padding:10px 20px;border-radius:6px;cursor:pointer;width:100%;transition:opacity .2s;}
+.video-skip:disabled{opacity:.38;cursor:not-allowed;}
+.hidden{display:none!important;}
+</style>
+</head>
+<body>
+<div id="flash"></div>
+<div id="toast"></div>
+
+<!-- TOP -->
+<div class="page active" id="pgTop">
+  <div class="logo-wrap">
+    <div class="logo">TIME<em>⟨</em>STOP<em>⟩</em></div>
+    <div class="logo-tag">秒数当てチャレンジ</div>
+  </div>
+  <div class="xp-card">
+    <div class="xp-row"><span class="xp-lv" id="xpLevel">Lv.1 Beginner</span><span class="xp-next" id="xpNext">0 / 100 XP</span></div>
+    <div class="xp-bar"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+  </div>
+  <div class="stats-strip">
+    <div class="stat-box"><div class="stat-lbl">Best</div><div class="stat-val" id="sBest">—</div></div>
+    <div class="stat-box"><div class="stat-lbl">Plays</div><div class="stat-val" id="sPlays">0</div></div>
+    <div class="stat-box"><div class="stat-lbl">Rank</div><div class="stat-val" id="sRank">#—</div></div>
+    <div class="stat-box"><div class="stat-lbl">Combo</div><div class="stat-val" id="sCombo">×1</div></div>
+  </div>
+  <div class="combo-badge" id="comboBadge">
+    <div style="font-size:1.5rem">🔥</div>
+    <div class="combo-info">
+      <div class="combo-lbl">COMBO STREAK</div>
+      <div class="combo-ct" id="comboCount">×3</div>
+    </div>
+    <div class="combo-m" id="comboMult">スコア×1.5</div>
+  </div>
+  <div class="card missions-card">
+    <div class="missions-ttl">📋 デイリーミッション</div>
+    <div id="missionsList"></div>
+  </div>
+  <div class="ad-strip">
+    <div class="ad-tag">広告</div>
+    <div style="font-size:1.5rem;flex-shrink:0">🎮</div>
+    <div style="flex:1"><div class="ad-head">ここに広告が入ります</div><div class="ad-sub">AdSense / AdMob を接続すると実際の広告に差し替わります</div></div>
+    <button class="ad-cta">詳細</button>
+  </div>
+  <div class="sec-lbl">— チャレンジを選ぶ —</div>
+  <div style="width:100%;display:flex;flex-direction:column;gap:7px;">
+    <div class="mode-row">
+      <div class="mcard" style="--mc:#00f5ff" onclick="startChallenge('c5')"><div class="mcard-icon">🎯</div><div class="mcard-name">5秒</div><div class="mcard-sub">EASY</div></div>
+      <div class="mcard" style="--mc:#3dffb0" onclick="startChallenge('c10')"><div class="mcard-icon">⚡</div><div class="mcard-name">10秒</div><div class="mcard-sub">NORMAL</div></div>
+      <div class="mcard" style="--mc:#ffab40" onclick="startChallenge('c20')"><div class="mcard-icon">🔥</div><div class="mcard-name">20秒</div><div class="mcard-sub">HARD</div></div>
+      <div class="mcard" style="--mc:#ff3cac" onclick="startChallenge('c30')"><div class="mcard-icon">💀</div><div class="mcard-name">30秒</div><div class="mcard-sub">EXPERT</div></div>
+    </div>
+    <div class="cotd" onclick="startChallenge('random')">
+      <div class="cotd-badge">🎲 ランダムチャレンジ</div>
+      <div class="cotd-title">今日の一発勝負</div>
+      <div class="cotd-desc">5〜30秒のランダム目標 — 止めるまで秒数不明</div>
+      <div class="cotd-num" id="cotdNum">??s</div>
+    </div>
+  </div>
+  <div class="bnav" style="margin-top:auto">
+    <button class="bnav-btn on" id="bn0" onclick="topNav(0)"><span class="ni">🎮</span>PLAY</button>
+    <button class="bnav-btn" id="bn1" onclick="topNav(1)"><span class="ni">🏆</span>RANK</button>
+    <button class="bnav-btn" id="bn2" onclick="topNav(2)"><span class="ni">💰</span>SHOP</button>
+  </div>
+</div>
+
+<!-- GAME -->
+<div class="page" id="pgGame">
+  <div class="ghdr">
+    <button class="back-btn" onclick="goBack()">← BACK</button>
+    <div class="mode-pill" id="gpMode">RANDOM</div>
+  </div>
+  <div class="gstatus">
+    <div class="gs-box"><div class="gs-ico">🔥</div><div><div class="gs-val" id="gpCombo">×1</div><div class="gs-lbl">COMBO</div></div></div>
+    <div class="hint-box" id="hintBox"><div>💡</div><div class="hint-txt" id="hintTxt">—</div></div>
+    <div class="gs-box"><div class="gs-ico">⭐</div><div><div class="gs-val" id="gpXPVal">0</div><div class="gs-lbl">XP</div></div></div>
+  </div>
+  <div class="ci-wrap"><div class="ci-lbl">— challenge —</div><div class="ci-name" id="gpName">ランダムチャレンジ</div></div>
+  <div class="target-wrap">
+    <div class="target-lbl">— target time —</div>
+    <div class="target-num" id="gpTarget">??<sup>s</sup></div>
+  </div>
+  <div class="tap-wrap">
+    <div class="pulse-ring"></div><div class="pulse-ring"></div><div class="pulse-ring"></div>
+    <div class="tap-circle" id="tapC" ontouchstart="">
+      <div class="tc-icon" id="tcIcon">👁️</div>
+      <div class="tc-text" id="tcText">タップでスタート</div>
+      <div class="tc-dots" id="tcDots"></div>
+    </div>
+  </div>
+  <div class="state-hint" id="gpHint">目標秒数を確認してタップ！</div>
+  <div class="result-card" id="resultCard">
+    <div class="rg" id="rGrade">S</div>
+    <div class="new-best" id="rNewBest">★ NEW BEST</div>
+    <div class="xp-gained" id="rXP"></div>
+    <div class="rdiff" id="rDiff">±0.000s</div>
+    <div style="font-size:.55rem;color:var(--muted2);letter-spacing:.12em;">誤差 / error</div>
+    <div class="rstats">
+      <div class="rsc"><div class="rsc-l">Target</div><div class="rsc-v" id="rcT">—</div></div>
+      <div class="rsc"><div class="rsc-l">Actual</div><div class="rsc-v" id="rcA">—</div></div>
+      <div class="rsc"><div class="rsc-l">Score</div><div class="rsc-v" id="rcS">—</div></div>
+    </div>
+  </div>
+  <div class="reward-wrap" id="rewardWrap">
+    <div class="reward-lbl">📺 動画を見て特典をゲット</div>
+    <button class="rw-btn rw-retry" id="rwRetry" onclick="watchAd('retry')">🔄 もう1回チャレンジ <span class="rw-badge">動画を見る</span></button>
+    <button class="rw-btn rw-double" id="rwDouble" onclick="watchAd('double')">✨ スコア2倍ボーナス <span class="rw-badge">動画を見る</span></button>
+    <button class="rw-btn rw-cont" id="rwCont" onclick="watchAd('continue')">💚 コンティニュー（コンボ維持） <span class="rw-badge">動画を見る</span></button>
+    <div style="font-size:.52rem;color:var(--muted2);text-align:center;">💡 ヒント機能は <span style="color:var(--premium)">プレミアム（¥120/月）</span> 限定</div>
+  </div>
+  <div class="result-ad" id="resultAd">
+    <div class="ad-tag">広告</div>
+    <div class="rad-inner">
+      <div style="font-size:1.5rem;flex-shrink:0">📱</div>
+      <div style="flex:1"><div class="ad-head">スポンサー広告</div><div class="ad-sub" id="adSubText">プレミアム（¥120/月）で広告なし＋ヒント機能</div></div>
+    </div>
+    <button class="rad-skip" onclick="skipAd()">広告を閉じる ›</button>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-s hidden" id="btnRetry" onclick="retry()">🔄 リトライ</button>
+    <button class="btn btn-p hidden" id="btnNext" onclick="nextPlay()">次へ ›</button>
+  </div>
+</div>
+
+<!-- RANKING -->
+<div class="page" id="pgRank">
+  <div class="rank-hdr"><div class="rank-title">RANKING</div><button class="back-btn" onclick="goTop()">← BACK</button></div>
+  <div class="tabs">
+    <button class="tab on" onclick="switchTab('all',this)">全期間</button>
+    <button class="tab" onclick="switchTab('daily',this)">今日</button>
+    <button class="tab" onclick="switchTab('challenge',this)">別</button>
+    <button class="tab" onclick="switchTab('friend',this)">友達</button>
+  </div>
+  <div class="cf-wrap" id="cfFilter">
+    <button class="cf-btn on" onclick="setCf('all',this)">全て</button>
+    <button class="cf-btn" onclick="setCf('c5',this)">5秒</button>
+    <button class="cf-btn" onclick="setCf('c10',this)">10秒</button>
+    <button class="cf-btn" onclick="setCf('c20',this)">20秒</button>
+    <button class="cf-btn" onclick="setCf('c30',this)">30秒</button>
+    <button class="cf-btn" onclick="setCf('random',this)">ランダム</button>
+  </div>
+  <div class="friend-card hidden" id="friendPanel">
+    <div class="fc-title">🤝 フレンドチャレンジ</div>
+    <div style="font-size:.6rem;color:var(--muted2);margin-bottom:9px;line-height:1.6;">コードを共有して友達のスコアと比較しよう！</div>
+    <div class="fc-code-row">
+      <div class="fc-code" id="myFriendCode">——</div>
+      <button class="fc-copy" onclick="copyCode()">コピー</button>
+    </div>
+    <div class="fc-input-row">
+      <input class="fc-input" id="friendCodeInput" placeholder="友達のコードを入力" maxlength="6">
+      <button class="fc-join" onclick="joinFriend()">検索</button>
+    </div>
+    <div class="fc-vs" id="fcVs">
+      <div style="font-size:.5rem;letter-spacing:.22em;color:var(--muted2);text-transform:uppercase;text-align:center;">— vs —</div>
+      <div class="fc-vs-row">
+        <div style="flex:1;"><div class="fc-vs-lbl">あなた</div><div class="fc-vs-name" id="fcMyName">—</div><div class="fc-vs-score" id="fcMyScore">—pts</div></div>
+        <div style="font-size:1.3rem;flex-shrink:0;">⚔️</div>
+        <div style="flex:1;text-align:right;"><div class="fc-vs-lbl" style="text-align:right;">フレンド</div><div class="fc-vs-name" id="fcFriendName">—</div><div class="fc-vs-score" id="fcFriendScore">—pts</div></div>
+      </div>
+      <div id="fcResult" style="font-size:.7rem;font-weight:700;text-align:center;"></div>
+    </div>
+  </div>
+  <div class="podium" id="podium"></div>
+  <div class="reward-banner" id="rewardBanner">
+    <div class="rb-title">🏆 ランキング報酬</div>
+    <div class="rb-item"><div class="rb-icon">🥇</div><div class="rb-info"><div class="rb-iname">週間1位</div><div class="rb-idesc">翌週のプレミアム無料＋バッジ付与</div></div><div class="rb-rew">FREE 1wk</div></div>
+    <div class="rb-item"><div class="rb-icon">🎖️</div><div class="rb-info"><div class="rb-iname">月間TOP3</div><div class="rb-idesc">「殿堂入り」称号バッジ永続付与</div></div><div class="rb-rew">称号</div></div>
+    <div class="rb-item"><div class="rb-icon">⚡</div><div class="rb-info"><div class="rb-iname">連続1位 3週間</div><div class="rb-idesc">「TIME GOD」永続称号付与</div></div><div class="rb-rew">永続称号</div></div>
+    <div class="rb-item"><div class="rb-icon">⭐</div><div class="rb-info"><div class="rb-iname">週間ベスト更新</div><div class="rb-idesc">毎週更新するたびに +50XP</div></div><div class="rb-rew">+50XP</div></div>
+  </div>
+  <div class="rank-list" id="rankList"><div class="rank-loading">読み込み中...</div></div>
+</div>
+
+<!-- SHOP -->
+<div class="page" id="pgShop">
+  <div class="shop-hdr"><div class="shop-title">SHOP</div><div class="shop-sub">プラン & 収益化</div></div>
+  <div class="plan-compare">
+    <div class="plan-card">
+      <div class="plan-name">FREE</div>
+      <div class="plan-price" style="color:var(--muted2)">¥0</div>
+      <div class="plan-per">永久無料</div>
+      <ul class="plan-feats">
+        <li class="yes">全チャレンジ</li>
+        <li class="yes">グローバルランキング</li>
+        <li class="yes">リワード動画特典</li>
+        <li>広告あり</li>
+        <li>ヒント機能なし</li>
+      </ul>
+      <button class="plan-btn free-btn" disabled>現在のプラン</button>
+    </div>
+    <div class="plan-card hot">
+      <div class="plan-name">PREMIUM</div>
+      <div class="plan-price" style="color:var(--premium)" id="premiumPriceDisplay">¥120</div>
+      <div class="plan-per">/ 月（税込）</div>
+      <ul class="plan-feats">
+        <li class="yes">広告完全非表示</li>
+        <li class="yes">💡 ヒント機能</li>
+        <li class="yes">リワード動画 無制限</li>
+        <li class="yes">スコア履歴 無制限</li>
+        <li class="yes">ランキング報酬対象</li>
+        <li class="yes">週次限定チャレンジ</li>
+      </ul>
+      <button class="plan-btn hot-btn" onclick="handlePremium()">アップグレード</button>
+    </div>
+  </div>
+  <div class="price-editor">
+    <div class="pe-lbl">🛠️ 管理者：料金変更</div>
+    <input class="pe-input" type="number" id="priceInput" value="120" min="0" max="9999">
+    <div class="pe-unit">円/月</div>
+    <button class="pe-btn" onclick="updatePrice()">適用</button>
+  </div>
+  <div class="card" style="gap:10px;display:flex;flex-direction:column;">
+    <div style="font-size:.72rem;font-weight:700;display:flex;align-items:center;gap:6px;">📢 広告配置プラン</div>
+    <div class="ap-list">
+      <div class="ap-item"><div class="ap-ico">🏠</div><div class="ap-info"><div class="ap-name">ホームバナー</div><div class="ap-desc">320×50 バナー — AdSense / AdMob</div></div><div class="ap-freq">常時</div></div>
+      <div class="ap-item"><div class="ap-ico">🎯</div><div class="ap-info"><div class="ap-name">リザルト広告</div><div class="ap-desc">ゲーム結果後インタースティシャル</div></div><div class="ap-freq">3回に1回</div></div>
+      <div class="ap-item"><div class="ap-ico">📺</div><div class="ap-info"><div class="ap-name">リワード動画</div><div class="ap-desc">もう1回・2倍・コンティニュー特典</div></div><div class="ap-freq">任意</div></div>
+    </div>
+  </div>
+  <div class="card" style="display:flex;flex-direction:column;gap:8px;">
+    <div style="font-size:.7rem;font-weight:700;display:flex;align-items:center;gap:6px;">💹 収益シミュレーション</div>
+    <div class="rev-row"><div class="rev-lbl">100 DAU</div><div class="rev-track"><div class="rev-fill" style="width:10%"></div></div><div class="rev-val">〜¥300/月</div></div>
+    <div class="rev-row"><div class="rev-lbl">1,000 DAU</div><div class="rev-track"><div class="rev-fill" style="width:36%"></div></div><div class="rev-val">〜¥3,000/月</div></div>
+    <div class="rev-row"><div class="rev-lbl">10,000 DAU</div><div class="rev-track"><div class="rev-fill" style="width:80%"></div></div><div class="rev-val">〜¥30,000/月</div></div>
+    <div class="rev-row"><div class="rev-lbl">+Premium</div><div class="rev-track"><div class="rev-fill" style="width:100%;background:var(--premium)"></div></div><div class="rev-val">×1.5〜2.0</div></div>
+  </div>
+  <div class="tech-note">広告：Google AdSense（Web）/ AdMob（アプリ）<br>課金：Stripe・App Store・Google Play ＋ サーバーサイド認証が必要</div>
+  <div class="chips">
+    <div class="chip">📢 AdSense</div><div class="chip">📱 AdMob</div><div class="chip">💳 Stripe</div>
+    <div class="chip">🍎 App Store</div><div class="chip">🤖 Google Play</div><div class="chip">🔥 Firebase</div>
+  </div>
+  <div class="bnav" style="margin-top:auto">
+    <button class="bnav-btn" onclick="topNav(0)"><span class="ni">🎮</span>PLAY</button>
+    <button class="bnav-btn" onclick="topNav(1)"><span class="ni">🏆</span>RANK</button>
+    <button class="bnav-btn on"><span class="ni">💰</span>SHOP</button>
+  </div>
+</div>
+
+<!-- Name modal -->
+<div class="modal-bg" id="nameModal">
+  <div class="modal">
+    <div class="modal-ttl">プレイヤー名を設定</div>
+    <div class="modal-txt">ランキングに表示される名前を入力してください</div>
+    <input type="text" id="nameIn" placeholder="例：タイムマスター" maxlength="12">
+    <div class="modal-btns">
+      <button class="btn btn-s" style="flex:1" onclick="closeName()">スキップ</button>
+      <button class="btn btn-p" style="flex:2" onclick="saveName()">決定</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reward video modal -->
+<div class="modal-bg" id="adModal">
+  <div class="modal">
+    <div class="modal-ttl" id="adTitle">📺 動画広告</div>
+    <div class="modal-txt" id="adDesc">動画を最後まで見ると特典を獲得できます</div>
+    <div class="video-mock">
+      <div class="video-screen"><span id="videoEmoji">📺</span><div class="video-prog" id="videoBar" style="width:0%"></div></div>
+      <div class="video-countdown" id="videoCd">読み込み中...</div>
+    </div>
+    <button class="video-skip" id="videoSkip" disabled onclick="completeAd()">特典を受け取る（5秒後）</button>
+  </div>
+</div>
+
+<script>
+const CH={c5:{name:'5秒チャレンジ',label:'5 SEC',target:5,mode:'EASY'},c10:{name:'10秒チャレンジ',label:'10 SEC',target:10,mode:'NORMAL'},c20:{name:'20秒チャレンジ',label:'20 SEC',target:20,mode:'HARD'},c30:{name:'30秒チャレンジ',label:'30 SEC',target:30,mode:'EXPERT'},random:{name:'ランダムチャレンジ',label:'RANDOM',target:null,mode:'RANDOM'}};
+const EMOJIS=['😺','🦊','🐼','🐸','🦁','🐯','🦄','🐲','🎃','👾','🤖','👻','🦋','🦅','🐬'];
+const LEVELS=[{name:'Beginner',xp:0},{name:'Trainee',xp:100},{name:'Timer',xp:250},{name:'Pro Timer',xp:500},{name:'Expert',xp:900},{name:'Master',xp:1500},{name:'Grand Master',xp:2500},{name:'TIME GOD',xp:9999}];
+const GRADE_XP={S:80,A:50,B:30,C:15,D:5};
+const AD_DUR=5;
+
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,typeof v==='object'?JSON.stringify(v):String(v));}catch(e){return null;}}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function topNav(i){[0,1,2].forEach(j=>document.getElementById('bn'+j).classList.toggle('on',j===i));if(i===0)showPage('pgTop');else if(i===1){showPage('pgRank');loadRanking();}else showPage('pgShop');}
+function goTop(){showPage('pgTop');refreshTop();}
+function goBack(){if(G.phase==='running'){cancelAnimationFrame(G.raf);G.phase='idle';}goTop();}
+let toastTmr;
+function toast(msg,clr){const t=document.getElementById('toast');t.textContent=msg;t.style.borderColor=clr||'var(--border)';t.classList.add('show');clearTimeout(toastTmr);toastTmr=setTimeout(()=>t.classList.remove('show'),2400);}
+function flash(clr){const f=document.getElementById('flash');f.style.background=clr;f.classList.add('on');setTimeout(()=>f.classList.remove('on'),150);}
+
+const MISSIONS=[{id:'play3',name:'3回プレイする',icon:'🎮',goal:3,reward:30,key:'plays'},{id:'gradeA',name:'A以上を取る',icon:'⭐',goal:1,reward:50,key:'gradeA'},{id:'combo3',name:'3連続コンボ',icon:'🔥',goal:3,reward:70,key:'combo'},{id:'c10',name:'10秒チャレンジ',icon:'⚡',goal:1,reward:40,key:'c10'}];
+let rankTab='all',rankCf='all';
+
+const G={cid:'random',targetSec:0,phase:'idle',startTime:null,raf:null,playCount:0,bestDiffMs:null,playerName:'',playerEmoji:'',playerId:'',friendCode:'',xp:0,combo:0,premiumPrice:120,pendingReward:null,scoreDoubled:false,weeklyBestScore:null,todayPlays:0,todayGradeA:0,todayComboMax:0,todayC10:0,missionClaimed:{}};
+
+(function init(){
+  G.playerId=ls('ts_pid')||(()=>{const id=Math.random().toString(36).slice(2,10);ls('ts_pid',id);return id;})();
+  G.playerName=ls('ts_name')||'';
+  G.playerEmoji=ls('ts_emoji')||EMOJIS[Math.floor(Math.random()*EMOJIS.length)];
+  ls('ts_emoji',G.playerEmoji);
+  const rb=ls('ts_best');G.bestDiffMs=rb!==null?parseFloat(rb):null;
+  G.playCount=parseInt(ls('ts_plays')||'0');
+  G.xp=parseInt(ls('ts_xp')||'0');
+  G.combo=parseInt(ls('ts_combo')||'0');
+  G.premiumPrice=parseInt(ls('ts_price')||'120');
+  G.weeklyBestScore=ls('ts_wbest')?parseInt(ls('ts_wbest')):null;
+  G.friendCode=G.playerId.slice(0,6).toUpperCase();
+  document.getElementById('myFriendCode').textContent=G.friendCode;
+  const today=new Date().toDateString();
+  if(ls('ts_mday')!==today){G.todayPlays=G.todayGradeA=G.todayComboMax=G.todayC10=0;G.missionClaimed={};ls('ts_mday',today);ls('ts_mc','{}');}
+  else{G.todayPlays=parseInt(ls('ts_mp')||'0');G.todayGradeA=parseInt(ls('ts_mga')||'0');G.todayComboMax=parseInt(ls('ts_mcm')||'0');G.todayC10=parseInt(ls('ts_mc10')||'0');try{G.missionClaimed=JSON.parse(ls('ts_mc')||'{}');}catch(e){G.missionClaimed={};}}
+  const d=new Date(),s=d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
+  document.getElementById('cotdNum').textContent=(((s*1664525+1013904223)&0x7fffffff)%26+5)+'s';
+  document.getElementById('priceInput').value=G.premiumPrice;
+  document.getElementById('premiumPriceDisplay').textContent='¥'+G.premiumPrice;
+  refreshTop();renderMissions();
+  if(!G.playerName)setTimeout(()=>document.getElementById('nameModal').classList.add('open'),700);
+})();
+
+function refreshTop(){
+  document.getElementById('sBest').textContent=G.bestDiffMs!==null?(G.bestDiffMs/1000).toFixed(3)+'s':'—';
+  document.getElementById('sPlays').textContent=G.playCount;
+  updateXPBar();updateCombo();
+}
+
+function getLvData(xp){for(let i=0;i<LEVELS.length-1;i++){if(xp>=LEVELS[i].xp&&xp<LEVELS[i+1].xp)return{lv:i,name:LEVELS[i].name,min:LEVELS[i].xp,max:LEVELS[i+1].xp};}return{lv:LEVELS.length-1,name:LEVELS[LEVELS.length-1].name,min:LEVELS[LEVELS.length-2].xp,max:9999};}
+function updateXPBar(){const d=getLvData(G.xp);const pct=d.max===9999?100:Math.round((G.xp-d.min)/(d.max-d.min)*100);document.getElementById('xpLevel').textContent=`Lv.${d.lv+1} ${d.name}`;document.getElementById('xpNext').textContent=`${G.xp} / ${d.max} XP`;document.getElementById('xpFill').style.width=pct+'%';document.getElementById('gpXPVal').textContent=G.xp;}
+function addXP(amt,src){const o=getLvData(G.xp).lv;G.xp+=amt;ls('ts_xp',G.xp);updateXPBar();const n=getLvData(G.xp).lv;if(n>o)toast(`🎉 Lv.UP! → Lv.${n+1} ${LEVELS[n].name}！`,'var(--xp)');else toast(`+${amt} XP${src?' ('+src+')':''}`, 'var(--xp)');}
+
+function comboMult(c){if(c<3)return 1;if(c<5)return 1.5;if(c<10)return 2;return 3;}
+function updateCombo(){const m=comboMult(G.combo);const ms=m===1?'×1':'×'+m.toFixed(1);document.getElementById('sCombo').textContent=ms;document.getElementById('gpCombo').textContent=ms;const b=document.getElementById('comboBadge');if(G.combo>=3){b.classList.add('show');document.getElementById('comboCount').textContent='×'+G.combo;document.getElementById('comboMult').textContent=`スコア×${m.toFixed(1)}`;}else b.classList.remove('show');}
+
+function mProg(m){const mp={plays:G.todayPlays,gradeA:G.todayGradeA,combo:G.todayComboMax,c10:G.todayC10};return Math.min(mp[m.key]||0,m.goal);}
+function renderMissions(){document.getElementById('missionsList').innerHTML=MISSIONS.map(m=>{const p=mProg(m),done=p>=m.goal,claimed=G.missionClaimed[m.id];return`<div class="mission-row"><div class="m-icon">${m.icon}</div><div class="m-info"><div class="m-name">${m.name}</div><div class="m-pbar"><div class="m-pfill" style="width:${p/m.goal*100}%"></div></div></div><div class="m-rew">+${m.reward}XP</div>${done&&!claimed?`<div class="m-claim" onclick="claimM('${m.id}',${m.reward})">🎁</div>`:claimed?`<div class="m-claim">✅</div>`:`<div style="font-size:.56rem;color:var(--muted2)">${p}/${m.goal}</div>`}</div>`;}).join('');}
+function claimM(id,xp){G.missionClaimed[id]=true;ls('ts_mc',JSON.stringify(G.missionClaimed));addXP(xp,'ミッション');renderMissions();}
+
+function closeName(){if(!G.playerName){G.playerName='Player'+Math.floor(Math.random()*9000+1000);ls('ts_name',G.playerName);}document.getElementById('nameModal').classList.remove('open');}
+function saveName(){const v=document.getElementById('nameIn').value.trim();if(v){G.playerName=v;ls('ts_name',v);}closeName();}
+function updatePrice(){const v=parseInt(document.getElementById('priceInput').value)||120;G.premiumPrice=v;ls('ts_price',v);document.getElementById('premiumPriceDisplay').textContent='¥'+v;document.getElementById('adSubText').textContent=`プレミアム（¥${v}/月）で広告なし＋ヒント機能`;document.querySelector('.reward-wrap div:last-child span').textContent=`プレミアム（¥${v}/月）`;toast('✅ 料金を¥'+v+'/月に更新');}
+function handlePremium(){alert('本番実装には Stripe / App Store / Google Play の課金APIとサーバーが必要です。\n設定中の料金：¥'+G.premiumPrice+'/月');}
+
+function startChallenge(cid){
+  G.cid=cid;G.scoreDoubled=false;
+  const c=CH[cid];
+  G.targetSec=cid==='random'?Math.floor(Math.random()*26)+5:c.target;
+  G.phase='idle';
+  showPage('pgGame');
+  document.getElementById('gpMode').textContent=c.mode;
+  document.getElementById('gpName').textContent=c.name;
+  document.getElementById('gpTarget').innerHTML=G.targetSec+'<sup>s</sup>';
+  document.getElementById('tcIcon').textContent='👁️';
+  document.getElementById('tcText').textContent='タップでスタート';
+  document.getElementById('tcDots').textContent='';
+  document.getElementById('gpHint').textContent='目標秒数を確認してタップ！';
+  document.getElementById('resultCard').classList.remove('show');
+  document.getElementById('rewardWrap').classList.remove('show');
+  document.getElementById('resultAd').classList.remove('show');
+  document.getElementById('btnRetry').classList.add('hidden');
+  document.getElementById('btnNext').classList.add('hidden');
+  document.getElementById('tapC').classList.remove('running');
+  document.querySelectorAll('.pulse-ring').forEach(r=>r.style.display='');
+  document.getElementById('hintBox').classList.remove('show');
+  updateCombo();
+}
+
+function handleTap(){if(G.phase==='idle')beginRun();else if(G.phase==='running')endRun();}
+document.getElementById('tapC').addEventListener('click',handleTap);
+document.getElementById('tapC').addEventListener('touchend',e=>{e.preventDefault();handleTap();},{passive:false});
+
+function beginRun(){
+  G.phase='running';G.startTime=performance.now();
+  document.getElementById('gpTarget').innerHTML='??<sup>s</sup>';
+  document.getElementById('tcIcon').textContent='⏱️';
+  document.getElementById('tcText').textContent='ストップ！';
+  document.getElementById('gpHint').textContent='タイマーは非表示 — 感覚を信じて！';
+  document.getElementById('tapC').classList.add('running');
+  document.querySelectorAll('.pulse-ring').forEach(r=>r.style.display='none');
+  let d=0;
+  (function tick(){if(G.phase!=='running')return;d=(d+1)%4;document.getElementById('tcDots').textContent=['·','· ·','· · ·','· · · ·'][d];G.raf=requestAnimationFrame(tick);})();
+}
+
+function endRun(){
+  const elapsed=performance.now()-G.startTime;
+  cancelAnimationFrame(G.raf);G.phase='result';
+  const tMs=G.targetSec*1000,diffMs=Math.abs(elapsed-tMs),sign=elapsed>=tMs?'+':'-',elapsedSec=elapsed/1000;
+  const [,grade]=[[50,'S'],[200,'A'],[500,'B'],[1500,'C'],[Infinity,'D']].find(([t])=>diffMs<t);
+  let score=Math.max(0,Math.round((10000-diffMs*2.5)*comboMult(G.combo)));
+  if(G.scoreDoubled){score*=2;G.scoreDoubled=false;}
+  flash('SAB'.includes(grade)?'rgba(0,245,255,.11)':'rgba(255,77,106,.09)');
+  let xpGain=GRADE_XP[grade];
+  if(G.combo>=3)xpGain=Math.round(xpGain*comboMult(G.combo));
+  if('SAB'.includes(grade)){G.combo++;if(G.combo>G.todayComboMax){G.todayComboMax=G.combo;ls('ts_mcm',G.todayComboMax);}}
+  else G.combo=0;
+  ls('ts_combo',G.combo);
+  const isNew=G.bestDiffMs===null||diffMs<G.bestDiffMs;
+  if(isNew){G.bestDiffMs=diffMs;ls('ts_best',diffMs);}
+  if(G.weeklyBestScore===null||score>G.weeklyBestScore){G.weeklyBestScore=score;ls('ts_wbest',score);xpGain+=50;setTimeout(()=>toast('⭐ 週間ベスト更新！ +50XP ボーナス','var(--gold)'),800);}
+  G.playCount++;ls('ts_plays',G.playCount);
+  G.todayPlays++;ls('ts_mp',G.todayPlays);
+  if('SA'.includes(grade)){G.todayGradeA++;ls('ts_mga',G.todayGradeA);}
+  if(G.cid==='c10'){G.todayC10++;ls('ts_mc10',G.todayC10);}
+  addXP(xpGain,'スコア');
+  document.getElementById('gpTarget').innerHTML=G.targetSec+'<sup>s</sup>';
+  const gEl=document.getElementById('rGrade');gEl.textContent=grade;gEl.className='rg '+grade;
+  document.getElementById('rNewBest').className='new-best'+(isNew?' show':'');
+  document.getElementById('rXP').textContent=`+${xpGain} XP${comboMult(G.combo)>1?' (コンボ×'+comboMult(G.combo).toFixed(1)+')':''}`;
+  document.getElementById('rDiff').textContent=sign+(diffMs/1000).toFixed(3)+'s';
+  document.getElementById('rcT').textContent=G.targetSec+'.000s';
+  document.getElementById('rcA').textContent=elapsedSec.toFixed(3)+'s';
+  document.getElementById('rcS').textContent=score.toLocaleString();
+  document.getElementById('resultCard').classList.add('show');
+  document.getElementById('tcDots').textContent='';
+  document.getElementById('tcText').textContent='';
+  document.getElementById('tcIcon').textContent={S:'🎯',A:'⚡',B:'👌',C:'😅',D:'🙈'}[grade];
+  document.getElementById('gpHint').textContent='';
+  document.getElementById('rewardWrap').classList.add('show');
+  // コンティニューはC/Dのときのみ表示
+  document.getElementById('rwCont').style.display='CD'.includes(grade)?'':'none';
+  document.getElementById('rwDouble').style.display='';
+  if(G.playCount%3===0)document.getElementById('resultAd').classList.add('show');
+  document.getElementById('btnRetry').classList.remove('hidden');
+  document.getElementById('btnNext').classList.remove('hidden');
+  updateCombo();refreshTop();renderMissions();
+  saveScore(score,diffMs,elapsedSec);
+}
+
+function skipAd(){document.getElementById('resultAd').classList.remove('show');}
+function retry(){startChallenge(G.cid);}
+function nextPlay(){startChallenge(G.cid);}
+
+const AD_CFG={retry:{title:'🔄 もう1回チャレンジ',desc:'動画を見ると同じチャレンジにもう1回挑戦できます！'},double:{title:'✨ スコア2倍ボーナス',desc:'動画を見ると次プレイのスコアが2倍になります！'},continue:{title:'💚 コンティニュー',desc:'コンボを維持したまま続行できます！'}};
+let adTmr=null;
+function watchAd(type){
+  G.pendingReward=type;const cfg=AD_CFG[type];
+  document.getElementById('adTitle').textContent=cfg.title;
+  document.getElementById('adDesc').textContent=cfg.desc;
+  document.getElementById('videoBar').style.width='0%';
+  document.getElementById('videoCd').textContent='読み込み中...';
+  document.getElementById('videoSkip').disabled=true;
+  document.getElementById('videoSkip').textContent=`特典を受け取る（${AD_DUR}秒後）`;
+  document.getElementById('adModal').classList.add('open');
+  const frames=['📺','🎬','🎥','📡','🎞️'];let fi=0;
+  const el=setInterval(()=>{fi=(fi+1)%frames.length;document.getElementById('videoEmoji').textContent=frames[fi];},500);
+  let t=0;clearInterval(adTmr);
+  setTimeout(()=>document.getElementById('videoCd').textContent=`再生中... ${AD_DUR}秒お待ちください`,350);
+  adTmr=setInterval(()=>{
+    t++;document.getElementById('videoBar').style.width=(t/AD_DUR*100)+'%';
+    const left=AD_DUR-t;
+    if(left>0)document.getElementById('videoSkip').textContent=`特典を受け取る（${left}秒後）`;
+    else{document.getElementById('videoSkip').textContent='✅ 特典を受け取る！';document.getElementById('videoSkip').disabled=false;document.getElementById('videoCd').textContent='広告終了！';clearInterval(adTmr);clearInterval(el);}
+  },1000);
+}
+function completeAd(){
+  clearInterval(adTmr);document.getElementById('adModal').classList.remove('open');
+  const type=G.pendingReward;G.pendingReward=null;
+  if(type==='retry'){toast('🔄 もう1回チャレンジ！','var(--accent)');setTimeout(()=>startChallenge(G.cid),350);}
+  else if(type==='double'){G.scoreDoubled=true;document.getElementById('rwDouble').style.display='none';toast('✨ 次のプレイのスコアが2倍！','var(--gold)');}
+  else if(type==='continue'){toast('💚 コンボ維持でコンティニュー！','var(--success)');setTimeout(()=>startChallenge(G.cid),350);}
+}
+
+function copyCode(){navigator.clipboard?.writeText(G.friendCode).catch(()=>{});toast('📋 コード「'+G.friendCode+'」をコピー！','var(--accent)');}
+async function joinFriend(){
+  const code=document.getElementById('friendCodeInput').value.trim().toUpperCase();
+  if(!code||code.length<4){toast('コードを入力してください','var(--danger)');return;}
+  if(code===G.friendCode){toast('自分のコードは使えません','var(--warn)');return;}
+  if(typeof window.storage==='undefined'){showVs({name:'?'+code,score:Math.floor(Math.random()*5000+3000),pid:'demo'});return;}
+  try{
+    const res=await window.storage.list('rank:',true);const keys=res?.keys||[];let best=null;
+    for(const k of keys){try{const r=await window.storage.get(k,true);if(!r)continue;const e=JSON.parse(r.value);if(e.pid&&e.pid.toUpperCase().startsWith(code)){if(!best||e.score>best.score)best=e;}}catch(er){}}
+    if(!best){toast('コードが見つかりません','var(--danger)');return;}
+    showVs(best);
+  }catch(e){showVs({name:'?'+code,score:Math.floor(Math.random()*5000+3000),pid:'demo'});}
+}
+function showVs(friend){
+  const myScore=G.weeklyBestScore||0;
+  document.getElementById('fcVs').classList.add('show');
+  document.getElementById('fcMyName').textContent=esc(G.playerName||'You');
+  document.getElementById('fcMyScore').textContent=myScore.toLocaleString()+'pts';
+  document.getElementById('fcFriendName').textContent=esc(friend.name);
+  document.getElementById('fcFriendScore').textContent=friend.score.toLocaleString()+'pts';
+  const r=document.getElementById('fcResult');
+  if(myScore>friend.score){r.textContent='🏆 あなたの勝ち！';r.style.color='var(--success)';}
+  else if(myScore<friend.score){r.textContent='😤 負けてる…もっと練習！';r.style.color='var(--danger)';}
+  else{r.textContent='🤝 引き分け！';r.style.color='var(--gold)';}
+}
+
+async function saveScore(score,diffMs,actualSec){
+  if(typeof window.storage==='undefined')return;
+  try{const lv=getLvData(G.xp).lv+1;const badge=ls('ts_badge')||'';
+    await window.storage.set('rank:'+Date.now()+':'+G.playerId,JSON.stringify({name:G.playerName||'Player',emoji:G.playerEmoji,lv,badge,score,diffMs,actualSec:parseFloat(actualSec.toFixed(3)),challenge:G.cid,targetSec:G.targetSec,ts:Date.now(),pid:G.playerId}),true);}catch(e){}}
+
+function switchTab(tab,el){
+  rankTab=tab;document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));el.classList.add('on');
+  const isChal=tab==='challenge',isFriend=tab==='friend';
+  document.getElementById('cfFilter').classList.toggle('show',isChal);
+  document.getElementById('friendPanel').classList.toggle('hidden',!isFriend);
+  document.getElementById('podium').style.display=isFriend?'none':'';
+  document.getElementById('rewardBanner').style.display=isFriend?'none':'';
+  document.getElementById('rankList').style.display=isFriend?'none':'';
+  if(!isFriend)loadRanking();
+}
+function setCf(cf,el){rankCf=cf;document.querySelectorAll('.cf-btn').forEach(b=>b.classList.remove('on'));el.classList.add('on');loadRanking();}
+
+async function loadRanking(){
+  const list=document.getElementById('rankList');list.innerHTML='<div class="rank-loading">読み込み中...</div>';
+  if(typeof window.storage==='undefined'){renderDemo();return;}
+  try{
+    const res=await window.storage.list('rank:',true);const keys=res?.keys||[];const entries=[];
+    for(const k of keys){try{const r=await window.storage.get(k,true);if(r)entries.push(JSON.parse(r.value));}catch(e){}}
+    const todayStart=new Date();todayStart.setHours(0,0,0,0);
+    let f=entries;
+    if(rankTab==='daily')f=entries.filter(e=>e.ts>=todayStart.getTime());
+    else if(rankTab==='challenge'&&rankCf!=='all')f=entries.filter(e=>e.challenge===rankCf);
+    f.sort((a,b)=>b.score-a.score);
+    const seen=new Map();for(const e of f){if(!seen.has(e.pid)||seen.get(e.pid).score<e.score)seen.set(e.pid,e);}
+    const deduped=[...seen.values()].sort((a,b)=>b.score-a.score).slice(0,50);
+    renderPodium(deduped.slice(0,3));renderRanking(deduped);
+    if(deduped[0]?.pid===G.playerId&&rankTab==='all'){ls('ts_badge','👑 週間1位');}
+    const mi=deduped.findIndex(e=>e.pid===G.playerId);
+    document.getElementById('sRank').textContent=mi>=0?'#'+(mi+1):'#—';
+  }catch(e){renderDemo();}
+}
+
+function renderPodium(top3){
+  const pod=document.getElementById('podium');if(!top3.length){pod.innerHTML='';return;}
+  const order=[top3[1],top3[0],top3[2]].filter(Boolean);
+  const cls=['p2','p1','p3'];
+  pod.innerHTML=order.map((e,i)=>{
+    const isMe=e.pid===G.playerId;
+    return`<div class="pod-item ${cls[i]}">
+      ${cls[i]==='p1'?`<div style="position:relative;height:20px;width:100%;display:flex;justify-content:center"><span style="position:absolute;top:-2px;font-size:1rem;">👑</span></div>`:'<div style="height:20px"></div>'}
+      <div class="pod-av">${e.emoji||'🎮'}<div class="pod-lv">${e.lv||1}</div></div>
+      <div style="font-size:1rem">${cls[i]==='p1'?'🥇':cls[i]==='p2'?'🥈':'🥉'}</div>
+      <div class="pod-name">${esc(e.name)}${isMe?' 👈':''}</div>
+      <div class="pod-score">${e.score.toLocaleString()}</div>
+      <div class="pod-block"></div>
+    </div>`;
+  }).join('');
+}
+
+function renderRanking(entries){
+  const list=document.getElementById('rankList');if(!entries.length){list.innerHTML='<div class="rank-loading">まだ記録がありません</div>';return;}
+  const CN={c5:'5秒',c10:'10秒',c20:'20秒',c30:'30秒',random:'ランダム'};
+  list.innerHTML=entries.map((e,i)=>{
+    const p=i+1,isMe=e.pid===G.playerId,rc=p<=3?' r'+p:'',mc=isMe?' me':'';
+    const medal=p===1?'🥇':p===2?'🥈':p===3?'🥉':p;
+    const date=new Date(e.ts).toLocaleDateString('ja',{month:'short',day:'numeric'});
+    const badgeHtml=e.badge?`<span class="ri-badge">${esc(e.badge)}</span>`:'';
+    return`<div class="ri${rc}${mc}">
+      <div class="ri-pos">${medal}</div>
+      <div class="ri-av">${e.emoji||'🎮'}<div class="ri-lv">${e.lv||1}</div></div>
+      <div class="ri-info"><div class="ri-name-row"><div class="ri-name">${esc(e.name)}${isMe?' 👈':''}</div>${badgeHtml}</div><div class="ri-meta">${CN[e.challenge]||'?'} · ±${(e.diffMs/1000).toFixed(3)}s · ${date}</div></div>
+      <div class="ri-score"><div class="ri-pts">${e.score.toLocaleString()}</div><div class="ri-ptsl">pts</div></div>
+    </div>`;
+  }).join('');
+}
+
+function renderDemo(){
+  renderPodium([
+    {name:'タイムマスター',emoji:'🦁',lv:7,score:9850,diffMs:60,challenge:'c10',ts:Date.now()-86400000,pid:'d1',badge:'👑 週間1位'},
+    {name:'秒読み忍者',emoji:'🐼',lv:5,score:9200,diffMs:320,challenge:'c20',ts:Date.now()-3600000,pid:'d2'},
+    {name:'クロノス',emoji:'🤖',lv:4,score:8800,diffMs:480,challenge:'c30',ts:Date.now()-7200000,pid:'d3'},
+  ]);
+  renderRanking([
+    {name:'タイムマスター',emoji:'🦁',lv:7,score:9850,diffMs:60,challenge:'c10',ts:Date.now()-86400000,pid:'d1',badge:'👑 週間1位'},
+    {name:'秒読み忍者',emoji:'🐼',lv:5,score:9200,diffMs:320,challenge:'c20',ts:Date.now()-3600000,pid:'d2'},
+    {name:'クロノス',emoji:'🤖',lv:4,score:8800,diffMs:480,challenge:'c30',ts:Date.now()-7200000,pid:'d3'},
+    {name:'ゆっくり名人',emoji:'🦊',lv:2,score:8100,diffMs:760,challenge:'c5',ts:Date.now()-1800000,pid:'d4'},
+    {name:'時の守人',emoji:'👾',lv:3,score:7400,diffMs:1040,challenge:'random',ts:Date.now()-900000,pid:'d5'},
+  ]);
+}
+</script>
+</body>
+</html>
